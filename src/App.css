@@ -1,0 +1,13 @@
+.menu-opt-btn {
+  background-color: #4f4d82;
+  border: none;
+  color: #fff47c;
+  padding: 30px 250px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 28px;
+  margin: 10px 10px;
+  cursor: pointer;
+  border-radius: 12px;
+}
