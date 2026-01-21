@@ -1,4 +1,4 @@
-function Menu() {
+function Menu(props) {
   return (
     <div
       style={{
@@ -12,10 +12,30 @@ function Menu() {
         flexDirection: "column",
       }}
     >
-      <button className="menu-opt-btn">Main</button>
-      <button className="menu-opt-btn">Projects</button>
-      <button className="menu-opt-btn">Skills</button>
-      <button className="menu-opt-btn">Contacts</button>
+      <button
+        className="menu-opt-btn"
+        onClick={() => props.switchQuest({ key: "sofa" })}
+      >
+        Main
+      </button>
+      <button
+        className="menu-opt-btn"
+        onClick={() => props.switchQuest({ key: "projects" })}
+      >
+        Projects
+      </button>
+      <button
+        className="menu-opt-btn"
+        onClick={() => props.switchQuest({ key: "skills" })}
+      >
+        Skills
+      </button>
+      <button
+        className="menu-opt-btn"
+        onClick={() => props.switchQuest({ key: "contacts" })}
+      >
+        Contacts
+      </button>
     </div>
   );
 }

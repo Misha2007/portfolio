@@ -5,6 +5,7 @@ extend({ PointerLockControls });
 import { useThree, useFrame } from "@react-three/fiber";
 import { useRef, useEffect, use, useState } from "react";
 import * as THREE from "three";
+import gsap from "gsap";
 
 function getNearestInteractable(playerPosition, interactables, range) {
   let nearest = null;
@@ -35,7 +36,7 @@ export default function Player(props) {
 
   const keys = useRef({});
   const keyPressed = useRef({});
-  const unlockReason = useRef(null);
+  const unlockReason = useRef("menu");
   const speed = 200;
   const detectionRange = 100;
   const interactables = props.interactables || null;
@@ -71,7 +72,8 @@ export default function Player(props) {
       keys.current[e.code] = true;
       keyPressed.current[e.code] = keyPressed.current[e.code] || true;
 
-      if (e.code === "Escape" && props.inputMode === "game") {
+      if (e.code === "Escape") {
+        console.log("Escape pressed");
         unlockReason.current = "menu";
         document.exitPointerLock();
       }
@@ -122,7 +124,7 @@ export default function Player(props) {
       } else {
         props.switchCanEnter(false);
       }
-      unlockReason.current = null;
+      unlockReason.current = "menu";
     };
     c.addEventListener("lock", onLock);
     c.addEventListener("unlock", onUnlock);
@@ -131,6 +133,27 @@ export default function Player(props) {
       c.removeEventListener("unlock", onUnlock);
     };
   }, []);
+
+  useEffect(() => {
+    if (props.cameraRef) props.cameraRef.current = camera;
+  }, [camera]);
+
+  useEffect(() => {
+    if (!props.isTourActive) return;
+    const step = props.tourSteps[props.tourStepIndex];
+    if (!step || !step.objectRef?.current) return;
+
+    const targetPos = step.objectRef.current.position;
+    const [x, y, z] = step.cameraOffset || [0, 10, 30];
+
+    gsap.to(camera.position, {
+      x: targetPos.x + x,
+      y: targetPos.y + y,
+      z: targetPos.z + z,
+      duration: 1.5,
+      onUpdate: () => camera.lookAt(targetPos.x, targetPos.y, targetPos.z),
+    });
+  }, [props.tourStepIndex, props.isTourActive]);
 
   useFrame((_, delta) => {
     if (props.quest.box) {
@@ -160,7 +183,7 @@ export default function Player(props) {
       const nearest = getNearestInteractable(
         camera.position,
         interactables,
-        detectionRange
+        detectionRange,
       );
       const isNear = Boolean(nearest);
       if (isNear !== nearQuest) {
@@ -182,7 +205,7 @@ export default function Player(props) {
     direction.normalize();
     direction.applyQuaternion(camera.quaternion);
     camera.position.addScaledVector(direction, speed * delta);
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -220, 220);
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -220, 180);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, -300, 300);
     camera.position.y = 120;
   });
