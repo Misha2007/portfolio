@@ -8,16 +8,52 @@ import * as THREE from "three";
 import gsap from "gsap";
 
 function getNearestInteractable(playerPosition, interactables, range) {
-  let nearest = null;
-  let minDistance = Infinity;
+  if (!interactables || Object.keys(interactables).length === 0) return null;
+
+  let nearestHint = null;
+  let nearestHintDist = Infinity;
+
+  let nearestInteraction = null;
+  let minInteractionDist = Infinity;
+
   for (const [key, box] of Object.entries(interactables)) {
-    const distance = box.distanceToPoint(playerPosition);
-    if (distance <= range && distance < minDistance) {
-      minDistance = distance;
-      nearest = { key, box };
+    const center = box.getCenter(new THREE.Vector3());
+    const distance = playerPosition.distanceTo(center);
+
+    if (distance < nearestHintDist) {
+      nearestHintDist = distance;
+      nearestHint = { position: center.clone() };
+    }
+
+    if (distance <= range && distance < minInteractionDist) {
+      minInteractionDist = distance;
+      nearestInteraction = { key, box, position: center.clone() };
     }
   }
-  return nearest;
+
+  return {
+    ...nearestHint,
+    ...(nearestInteraction || {}),
+  };
+}
+
+function computePathPoints(startPos, endPos, numPoints = 6) {
+  if (!startPos || !endPos)
+    return [
+      [0, 0, 0],
+      [0, 0, 0],
+    ];
+
+  const points = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints;
+    points.push([
+      THREE.MathUtils.lerp(startPos.x, endPos.x, t),
+      THREE.MathUtils.lerp(startPos.y, endPos.y, t) - 20,
+      THREE.MathUtils.lerp(startPos.z, endPos.z, t),
+    ]);
+  }
+  return points;
 }
 
 export default function Player(props) {
@@ -38,7 +74,7 @@ export default function Player(props) {
   const keyPressed = useRef({});
   const unlockReason = useRef("menu");
   const speed = 200;
-  const detectionRange = 100;
+  const detectionRange = 150;
   const interactables = props.interactables || null;
 
   const handleClick = (e) => {
@@ -145,14 +181,6 @@ export default function Player(props) {
 
     const targetPos = step.objectRef.current.position;
     const [x, y, z] = step.cameraOffset || [0, 10, 30];
-
-    gsap.to(camera.position, {
-      x: targetPos.x + x,
-      y: targetPos.y + y,
-      z: targetPos.z + z,
-      duration: 1.5,
-      onUpdate: () => camera.lookAt(targetPos.x, targetPos.y, targetPos.z),
-    });
   }, [props.tourStepIndex, props.isTourActive]);
 
   useFrame((_, delta) => {
@@ -185,12 +213,17 @@ export default function Player(props) {
         interactables,
         detectionRange,
       );
-      const isNear = Boolean(nearest);
+      if (nearest.position) {
+        const pathPoints = computePathPoints(camera.position, nearest.position);
+
+        props.onUpdateTourPath(pathPoints);
+      }
+      const isNear = Boolean(!!nearest.key);
       if (isNear !== nearQuest) {
         setNearQuest(isNear);
         props.switchNearQuest(isNear);
+        setActiveObject(nearest);
       }
-      setActiveObject(nearest);
     }
     if (keyPressed.current["KeyE"] && !keyPr && nearQuest) {
       console.log("Event Triggered!", activeObject);

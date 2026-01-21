@@ -27,6 +27,7 @@ function Scene() {
 
   const [currentPart, setCurrentPart] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
+  const [tourPathPoints, setTourPathPoints] = useState([]);
 
   const projects = [
     {
@@ -508,12 +509,7 @@ function Scene() {
               <color attach="background" args={["#111"]} />
               {isTourActive && cameraRef.current && (
                 <TourPath
-                  pathPoints={[
-                    [0, 0, 0],
-                    [5, 0, -10],
-                    [10, 0, -20],
-                    [15, 0, -25],
-                  ]}
+                  pathPoints={tourPathPoints}
                   isTourActive={isTourActive}
                   camera={cameraRef.current}
                 />
@@ -558,6 +554,7 @@ function Scene() {
                 tourStepIndex={tourStepIndex}
                 setTourStepIndex={setTourStepIndex}
                 cameraRef={cameraRef}
+                onUpdateTourPath={setTourPathPoints}
               />
               <MainCube /> <Room scale={1} />
               <Lamp scale={1} position={[-40, 10, -50]} />
