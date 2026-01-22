@@ -15,6 +15,8 @@ import NightStand from "./NightStand";
 import ObjectPositionTracker from "./ObjectPositionTracker";
 import { ConeGeometry } from "three";
 import TourPath from "./TourPath";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 function Scene() {
   const textParts = [
@@ -24,6 +26,30 @@ function Scene() {
     "Outside of programming, I enjoy playing volleyball and ping pong. I also like to play the guitar in my free time, it's a great way to relax and express creativity in a different way.",
     "Thank you for visiting my portfolio, and feel free to explore my work!",
   ];
+
+  const driverObj = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: "#element-of-mystery",
+        popover: {
+          title: "Instructions!",
+          description:
+            "These are the basic controls to navigate through the room. You can also find quests here.",
+          className: "first-step",
+        },
+      },
+      {
+        element: "#element-of-mystery-2",
+        popover: {
+          title: "Navigation path!",
+          description:
+            "You need to follow this path to get able to interact with an element.",
+          className: "first-step",
+        },
+      },
+    ],
+  });
 
   const [currentPart, setCurrentPart] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -222,6 +248,12 @@ function Scene() {
     switchCanEnter(true);
   };
 
+  useEffect(() => {
+    if (isTourActive) {
+      driverObj.drive();
+    }
+  }, [isTourActive]);
+
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
       {!isTours && !isTourActive && (
@@ -285,16 +317,21 @@ function Scene() {
             >
               <div
                 style={{
-                  backgroundColor: "#fff",
-                  width: "100px",
-                  height: "100px",
+                  width: "50px",
+                  height: "50px",
                   position: "absolute",
                   top: "50px",
                   right: "50px",
                   zIndex: 1,
                 }}
                 onClick={buttonClicked}
-              ></div>
+              >
+                <img
+                  src="/close-x.svg"
+                  alt=""
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </div>
               <Menu switchQuest={switchQuest} setInputMode={setInputMode} />
             </div>
           )}
@@ -400,6 +437,18 @@ function Scene() {
             </div>
           )}
           <div
+            id="element-of-mystery-2"
+            style={{
+              position: "absolute",
+              top: "70%",
+              left: "47.7%",
+              padding: "100px 20px",
+              borderRadius: "5px",
+              zIndex: 1,
+            }}
+          ></div>
+          <div
+            id="element-of-mystery"
             style={{
               position: "absolute",
               top: "20px",
