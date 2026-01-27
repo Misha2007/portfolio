@@ -118,3 +118,134 @@
     transform: scale(1);
   }
 }
+
+.info-card {
+  bottom: 30px;
+  right: 30px;
+  width: 250px;
+  background: #5d5aa5; /* deep purple */
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  font-family: "Segoe UI", sans-serif;
+  transform: translateY(0);
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.info-header {
+  background: #fff47c; /* yellow header */
+  color: #803030; /* red text */
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
+  font-size: 18px;
+  text-transform: uppercase;
+  display: flex;
+}
+
+.info-image {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-bottom: 3px solid #803030; /* red accent */
+}
+
+.info-text {
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.info-close {
+  top: 13px;
+  right: 8px;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.card {
+  width: 600px;
+  height: 350px;
+  display: flex;
+  font-family: "Georgia", serif;
+  background: #000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  text-align: start;
+}
+
+/* LEFT SIDE */
+.card-left {
+  flex: 2;
+  background: #555285;
+  color: white;
+  padding: 30px;
+  padding-top: 60px;
+}
+
+.name {
+  margin: 0;
+  font-size: 26px;
+}
+
+.title {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.info {
+  margin-top: 30px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.info-row a {
+  color: #fff;
+}
+
+.info-row svg {
+  background: #2f2d5c;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+/* RIGHT SIDE */
+.card-right {
+  flex: 2;
+  background: #555285;
+}
+
+.card-right div {
+  background: #fff47c;
+  padding: 30px;
+  border-bottom-left-radius: 80px;
+  box-shadow: inset 5px 0 0 #2f2d5c;
+}
+
+.logo {
+  font-size: 36px;
+  margin: 0;
+  color: #555285;
+}
+
+.slogan {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #555285;
+}

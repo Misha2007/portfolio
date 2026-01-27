@@ -43,6 +43,6 @@
 import { useGLTF } from "@react-three/drei";
 
 export default function Room(props) {
-  const { scene } = useGLTF("/room_main.glb");
+  const { scene } = useGLTF("/portfolio_main2.glb");
   return <primitive object={scene} {...props} />;
 }

@@ -14,25 +14,25 @@ function Menu(props) {
     >
       <button
         className="menu-opt-btn"
-        onClick={() => props.switchQuest({ key: "sofa" })}
+        onClick={() => props.switchQuest({ key: "sofa" }, true)}
       >
         Main
       </button>
       <button
         className="menu-opt-btn"
-        onClick={() => props.switchQuest({ key: "projects" })}
+        onClick={() => props.switchQuest({ key: "nightStand" }, true)}
       >
         Projects
       </button>
       <button
         className="menu-opt-btn"
-        onClick={() => props.switchQuest({ key: "skills" })}
+        onClick={() => props.switchQuest({ key: "shelves" }, true)}
       >
         Skills
       </button>
       <button
         className="menu-opt-btn"
-        onClick={() => props.switchQuest({ key: "contacts" })}
+        onClick={() => props.switchQuest({ key: "table" }, true)}
       >
         Contacts
       </button>

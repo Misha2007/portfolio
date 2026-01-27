@@ -56,20 +56,9 @@ export default function TourPath({ pathPoints, isTourActive, camera }) {
       <Line
         points={pathPointsT.map((p) => new THREE.Vector3(...p))}
         color="cyan"
-        lineWidth={10}
+        lineWidth={20}
         dashed={true}
       />
-
-      {pathPointsT.map((point, idx) => (
-        <mesh key={idx} ref={arrowRefs.current[idx]} position={point}>
-          <coneGeometry args={[5, 5, 1]} />
-          <meshStandardMaterial
-            color="yellow"
-            emissive="yellow"
-            emissiveIntensity={0.6}
-          />
-        </mesh>
-      ))}
     </>
   );
 }

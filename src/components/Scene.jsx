@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Loader } from "@react-three/drei";
+import { Box, Loader } from "@react-three/drei";
 import Player from "./Player";
 import Room from "./Room";
 import Menu from "./Menu";
@@ -17,6 +17,14 @@ import { ConeGeometry } from "three";
 import TourPath from "./TourPath";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import PingPongPaddle from "./PingPongPaddle";
+import PingPongBall from "./PingPongBall";
+import InfoCard from "./InfoCard";
+import VisitingCard from "./VisitingCard";
+import VisitingCard3D from "./VisitingCard3d";
+import Door from "./Door";
+import { useNavigate } from "react-router-dom";
+import { Stats } from "@react-three/drei";
 
 function Scene() {
   const textParts = [
@@ -54,6 +62,7 @@ function Scene() {
   const [currentPart, setCurrentPart] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [tourPathPoints, setTourPathPoints] = useState([]);
+  const navigate = useNavigate();
 
   const projects = [
     {
@@ -142,40 +151,30 @@ function Scene() {
   const sofaRef = useRef();
   const shelvesRef = useRef();
   const guitarRef = useRef();
-  const bookRef = useRef();
+  const pingPongPaddleRef = useRef();
   const nightStand = useRef();
+  const doorRef = useRef();
+  const visitingCardRef = useRef();
 
   const [isTourActive, setIsTourActive] = useState(false);
   const [isTours, setIsTours] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
   const cameraRef = useRef();
+  const [openShelf, setOpenShelf] = useState(null);
+  const [shouldRelock, setShouldRelock] = useState(false);
 
-  const tourSteps = [
-    {
-      id: "sofa",
-      objectRef: sofaRef,
-      text: "This is the sofa. Press 'E' to interact with it!",
-      cameraOffset: [0, 20, 40],
-    },
-    {
-      id: "guitar",
-      objectRef: guitarRef,
-      text: "Here is the guitar! Try pressing 'E' to play some notes.",
-      cameraOffset: [0, 10, 30],
-    },
-    {
-      id: "nightStand",
-      objectRef: nightStand,
-      text: "Finally, the nightstand. You can open folders here.",
-      cameraOffset: [0, 10, 20],
-    },
-  ];
-
-  const switchQuest = (quest) => {
+  const switchQuest = (quest, fromMenu = false) => {
+    if (fromMenu) {
+      setIsMenu(false);
+      quest.box = interactables[quest.key];
+      console.log("Switched quest from menu:", quest);
+    }
+    if (quest.key === "door") navigate("/");
     setSofaQuestDone(sofaQuestDone || quest.key === "sofa");
     setShelvesQuestDone(shelvesQuestDone || quest.key === "shelves");
     setNightStandQuestDone(nightStandQuestDone || quest.key === "nightStand");
     setQuest(quest);
+    setInputMode("ui");
   };
 
   const switchNearQuest = (near) => setNearQuest(near);
@@ -200,10 +199,15 @@ function Scene() {
         setFolderPage(page);
         setOpenFolder(null);
       }
+      if (e.key >= "1" && e.key <= "3") {
+        const index = Number(e.key);
+
+        setOpenShelf((current) => (current === index ? null : index));
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [setOpenShelf]);
 
   useEffect(() => {
     if (!quest) return;
@@ -237,15 +241,16 @@ function Scene() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const startIndex = folderPage * FOLDERS_PER_PAGE;
-  const visibleFolders = projects.slice(
-    startIndex,
-    startIndex + FOLDERS_PER_PAGE,
-  );
+  const visibleFolders = projects.slice(0, 2);
 
   const buttonClicked = () => {
     console.log("Button clicked!");
     switchCanEnter(true);
+    setShouldRelock(true);
+    setQuest(false);
+    setIsMenu(false);
+    setInputMode("game");
+    setSelectedItem(null);
   };
 
   useEffect(() => {
@@ -292,7 +297,7 @@ function Scene() {
             Start Tour
           </button>
           <p
-            style={{ color: "#fff47c", marginTop: "20px" }}
+            style={{ color: "#fff47c", marginTop: "20px", cursor: "pointer" }}
             onClick={() => {
               setIsTourActive(false);
               setInputMode("game");
@@ -305,6 +310,40 @@ function Scene() {
       )}
       {isTours && (
         <>
+          {inputMode !== "game" && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 10,
+                background: "transparent",
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  position: "absolute",
+                  top: "50px",
+                  right: "50px",
+                  zIndex: 1,
+                  cursor: "pointer",
+                  pointerEvents: "auto",
+                  borderRadius: "10px",
+                  background: "#fff",
+                }}
+                onClick={buttonClicked}
+              >
+                <img
+                  src="/close-x.svg"
+                  alt="Close"
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </div>
+            </div>
+          )}
+
           {!canEnter && isMenu && (
             <div
               style={{
@@ -323,6 +362,9 @@ function Scene() {
                   top: "50px",
                   right: "50px",
                   zIndex: 1,
+                  borderRadius: "10px",
+                  background: "#fff",
+                  cursor: "pointer",
                 }}
                 onClick={buttonClicked}
               >
@@ -345,7 +387,7 @@ function Scene() {
                 top: "50%",
                 zIndex: 1,
                 transform: "translate(50%, -50%)",
-                width: "80%",
+                width: quest.key === "visitingCard" ? "auto" : "80%",
                 wordWrap: "break-word",
                 whiteSpace: "normal",
               }}
@@ -370,28 +412,7 @@ function Scene() {
                   </button>
                 </div>
               )}
-              {quest.key === "shelves" && (
-                <button
-                  onClick={() => {
-                    setQuest({});
-                    setSelectedItem(null);
-                    setInputMode("game");
-                  }}
-                >
-                  Close
-                </button>
-              )}
-              {quest.key === "nightStand" && !openFolder && (
-                <button
-                  onClick={() => {
-                    setQuest({});
-                    setSelectedItem(null);
-                    setInputMode("game");
-                  }}
-                >
-                  Close
-                </button>
-              )}
+              {quest.key === "visitingCard" && <VisitingCard></VisitingCard>}
             </div>
           )}
           {selectedItem && inputMode !== "game" && (
@@ -402,21 +423,19 @@ function Scene() {
                 textAlign: "center",
                 right: "50%",
                 top: "40%",
-                zIndex: 1,
+                zIndex: 2,
                 transform: "translate(50%, -50%)",
                 wordWrap: "break-word",
                 whiteSpace: "normal",
-                backgroundColor: "#4F4D82",
                 padding: "20px",
               }}
             >
-              <div>
-                {selectedItem}
-                {selectedItem === "Guitar" && (
-                  <p>This guitar is from 1972...</p>
-                )}
-                {selectedItem === "Book" && <p>A mysterious old book...</p>}
-              </div>
+              {selectedItem && (
+                <InfoCard
+                  selectedItem={selectedItem}
+                  setSelectedItem={setSelectedItem}
+                ></InfoCard>
+              )}
             </div>
           )}
           {nearQuest && (
@@ -563,27 +582,26 @@ function Scene() {
                   camera={cameraRef.current}
                 />
               )}
-              <ambientLight intensity={0.3} />
-              {/* <directionalLight position={[-100, 180, -20]} intensity={20} /> */}
-              <pointLight
-                position={[-100, 180, -20]}
-                intensity={15}
-                distance={1500}
-                decay={0.5}
-              />
-              <pointLight
-                position={[-90, 160, 120]}
-                intensity={15}
-                distance={1500}
-                decay={0.5}
-              />
-              <pointLight
-                position={[-10, 140, 50]}
-                intensity={15}
-                distance={1500}
-                decay={0.5}
-              />
+              <ambientLight intensity={1} />
               <directionalLight intensity={0.4} position={[5, 5, 5]} />
+              <pointLight
+                position={[-75, 140, 100]}
+                intensity={20}
+                distance={400}
+                decay={0.5}
+              />
+              <pointLight
+                position={[-45, 133, 51]}
+                intensity={20}
+                distance={400}
+                decay={0.5}
+              />
+              <pointLight
+                position={[-85, 140, 0]}
+                intensity={20}
+                distance={400}
+                decay={0.5}
+              />
               <Player
                 switchCanEnter={switchCanEnter}
                 switchQuest={switchQuest}
@@ -595,17 +613,25 @@ function Scene() {
                 isMenu={isMenu}
                 setIsMenu={setIsMenu}
                 guitarRef={guitarRef}
-                bookRef={bookRef}
+                pingPongPaddleRef={pingPongPaddleRef}
                 setSelectedItem={setSelectedItem}
-                tourSteps={tourSteps}
                 isTourActive={isTourActive}
                 setIsTourActive={setIsTourActive}
                 tourStepIndex={tourStepIndex}
                 setTourStepIndex={setTourStepIndex}
                 cameraRef={cameraRef}
                 onUpdateTourPath={setTourPathPoints}
+                shouldRelock={shouldRelock}
+                setShouldRelock={setShouldRelock}
               />
               <MainCube /> <Room scale={1} />
+              <Door ref={doorRef} />
+              <ObjectPositionTracker
+                objectRef={doorRef}
+                onReady={(box) =>
+                  setInteractables((prev) => ({ ...prev, door: box }))
+                }
+              />
               <Lamp scale={1} position={[-40, 10, -50]} />
               <Lamp scale={1} position={[0, 0, 0]} />
               <Lamp scale={1} position={[-30, 10, 50]} />
@@ -624,11 +650,24 @@ function Scene() {
                 }
               />
               <Table scale={1} position={[20, 0, 0]} />
+              <VisitingCard3D
+                rotation={[0, 0, 1.5]}
+                scale={5}
+                position={[-30, 41, 93]}
+                ref={visitingCardRef}
+              />
+              <ObjectPositionTracker
+                objectRef={visitingCardRef}
+                onReady={(box) =>
+                  setInteractables((prev) => ({ ...prev, visitingCard: box }))
+                }
+              />
               <Sofa
                 scale={1}
                 position={[-100, 0, 100]}
                 rotation={[0, Math.PI, 0]}
               />
+              <Stats />
               <Guitar
                 scale={100}
                 position={[-100, 70, -200]}
@@ -636,17 +675,25 @@ function Scene() {
                 name="Guitar"
                 ref={guitarRef}
               />
-              <mesh ref={bookRef} name="Book" position={[0, 100, -250]}>
-                <boxGeometry args={[5, 5, 2]} />
-                <meshStandardMaterial color="blue" />
-              </mesh>
+              <PingPongPaddle
+                scale={8}
+                position={[-10, 95, -235]}
+                rotation={[1, -1, -0.5]}
+                name="PingPongPaddle"
+                ref={pingPongPaddleRef}
+              />
+              <PingPongBall scale={150} position={[-15, 95, -230]} />
               {/* <mesh ref={nightStand} position={[-150, 50, 250]}> <boxGeometry args={[50, 50, 50]} /> <meshStandardMaterial color="blue" /> </mesh> */}
               <NightStand
                 scale={30}
-                position={[-150, 20, 250]}
+                position={[-150, 10, 250]}
                 ref={nightStand}
                 name="nightStand"
                 rotation={[0, Math.PI, 0]}
+                openShelf={openShelf}
+                projects={projects}
+                inputMode={inputMode}
+                setOpenFolder={setOpenFolder}
               />
               <ObjectPositionTracker
                 objectRef={nightStand}
@@ -655,7 +702,7 @@ function Scene() {
                 }
               />
               {true && (
-                <group position={[-150, 80, 250]}>
+                <group position={[-150, 70, 250]}>
                   {visibleFolders.map((project, i) => (
                     <Folder
                       key={project.id}
@@ -663,6 +710,7 @@ function Scene() {
                       position={[0, 0, i === 0 ? 12 : -12]}
                       onOpen={setOpenFolder}
                       inputMode={inputMode}
+                      scale={30}
                     />
                   ))}
                 </group>

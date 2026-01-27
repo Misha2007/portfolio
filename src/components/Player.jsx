@@ -3,7 +3,7 @@ import { PointerLockControls } from "@react-three/drei";
 extend({ PointerLockControls });
 
 import { useThree, useFrame } from "@react-three/fiber";
-import { useRef, useEffect, use, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 
@@ -64,21 +64,31 @@ export default function Player(props) {
   const mouse = useRef(new THREE.Vector2());
 
   const guitarRef = props.guitarRef;
-  const bookRef = props.bookRef;
+  const pingPongPaddleRef = props.pingPongPaddleRef;
 
   const [nearQuest, setNearQuest] = useState(false);
   const [activeObject, setActiveObject] = useState(null);
   const [keyPr, setKeyPr] = useState(false);
+  const activeObjectRef = useRef(null);
 
   const keys = useRef({});
   const keyPressed = useRef({});
   const unlockReason = useRef("menu");
   const speed = 200;
   const detectionRange = 150;
+
+  const dir = useMemo(() => new THREE.Vector3(), []);
+  const ofsVec = useMemo(() => new THREE.Vector3(), []);
+
+  const centerVec = useMemo(() => new THREE.Vector3(), []);
+
+  const interactCheckTimer = useRef(0);
+
   const interactables = props.interactables || null;
 
   const handleClick = (e) => {
     if (props.inputMode !== "ui") return;
+    console.log("Click detected in UI mode");
     const rect = gl.domElement.getBoundingClientRect();
     mouse.current.x =
       ((e.clientX - rect.left) / (rect.right - rect.left)) * 2 - 1;
@@ -87,16 +97,33 @@ export default function Player(props) {
 
     raycaster.current.setFromCamera(mouse.current, camera);
 
-    const objectsToTest = [guitarRef.current, bookRef.current].filter(Boolean);
+    const objectsToTest = [guitarRef.current, pingPongPaddleRef.current].filter(
+      Boolean,
+    );
+    console.log("Objects to test:", objectsToTest);
     if (objectsToTest.length === 0) return;
 
-    const intersects = raycaster.current.intersectObjects(objectsToTest);
-    if (intersects.length > 0 && intersects[0].object) {
-      console.log("intersects:", intersects);
+    const intersects = raycaster.current.intersectObjects(objectsToTest, true);
+    if (intersects.length > 0) {
+      const hitObject = intersects[0].object;
 
-      props.setSelectedItem(intersects[0].object.name);
+      let topLevel = hitObject;
+      while (topLevel.parent && topLevel.parent.type !== "Scene") {
+        topLevel = topLevel.parent;
+      }
+
+      const nameToUse = topLevel.name || hitObject.name;
+
+      console.log("intersects:", nameToUse);
+      props.setSelectedItem(nameToUse);
     }
   };
+
+  useEffect(() => {
+    if (props.inputMode === "ui") {
+      document.exitPointerLock();
+    }
+  }, [props.inputMode]);
 
   useEffect(() => {
     window.addEventListener("click", handleClick);
@@ -131,8 +158,8 @@ export default function Player(props) {
     const canvas = gl.domElement;
     const lock = () => {
       if (props.inputMode === "game") {
-        console.log(props.inputMode);
-        canvas.requestPointerLock();
+        console.log("From canvas", props.inputMode);
+        // canvas.requestPointerLock();
       }
     };
     canvas.addEventListener("click", lock);
@@ -168,46 +195,41 @@ export default function Player(props) {
       c.removeEventListener("lock", onLock);
       c.removeEventListener("unlock", onUnlock);
     };
-  }, []);
+  }, [unlockReason.current, controls.current]);
 
   useEffect(() => {
     if (props.cameraRef) props.cameraRef.current = camera;
   }, [camera]);
 
-  useEffect(() => {
-    if (!props.isTourActive) return;
-    const step = props.tourSteps[props.tourStepIndex];
-    if (!step || !step.objectRef?.current) return;
-
-    const targetPos = step.objectRef.current.position;
-    const [x, y, z] = step.cameraOffset || [0, 10, 30];
-  }, [props.tourStepIndex, props.isTourActive]);
-
   useFrame((_, delta) => {
     if (props.quest.box) {
-      const center = new THREE.Vector3();
-      props.quest.box.getCenter(center);
-      let offset = new THREE.Vector3(0, 0, 0);
+      if (props.quest.key === "door") return;
+      props.quest.box.getCenter(centerVec);
       if (props.quest.key === "shelves") {
-        offset = new THREE.Vector3(0, 50, 200);
+        ofsVec.set(0, 50, 200);
       } else if (props.quest.key === "nightStand") {
-        offset = new THREE.Vector3(50, 80, 0);
+        ofsVec.set(50, 80, 0);
+      } else if (props.quest.key === "visitingCard") {
+        ofsVec.set(50, 80, 0);
       } else {
-        offset = new THREE.Vector3(200, 50, 0);
+        ofsVec.set(200, 50, 0);
       }
-      camera.position.copy(center.clone().add(offset));
-      camera.lookAt(center);
-      return;
+      camera.position.copy(centerVec.clone().add(ofsVec));
+      camera.lookAt(centerVec);
     }
     if (props.inputMode !== "game") return;
-    const direction = new THREE.Vector3();
-    if (keys.current["KeyW"]) direction.z -= 1;
-    if (keys.current["KeyS"]) direction.z += 1;
-    if (keys.current["KeyA"]) direction.x -= 1;
-    if (keys.current["KeyD"]) direction.x += 1;
-    if (keys.current["Space"]) direction.y += 5;
-    if (keys.current["ShiftLeft"]) direction.y -= 5;
-    if (interactables && Object.keys(interactables).length > 0) {
+    dir.set(0, 0, 0);
+    if (keys.current["KeyW"]) dir.z -= 1;
+    if (keys.current["KeyS"]) dir.z += 1;
+    if (keys.current["KeyA"]) dir.x -= 1;
+    if (keys.current["KeyD"]) dir.x += 1;
+
+    interactCheckTimer.current += delta;
+    if (
+      interactCheckTimer.current > 0.1 &&
+      interactables &&
+      Object.keys(interactables).length > 0
+    ) {
       const nearest = getNearestInteractable(
         camera.position,
         interactables,
@@ -215,8 +237,12 @@ export default function Player(props) {
       );
       if (nearest.position) {
         const pathPoints = computePathPoints(camera.position, nearest.position);
-
         props.onUpdateTourPath(pathPoints);
+        activeObjectRef.current = {
+          key: nearest.key || null,
+          box: nearest.box || null,
+          position: nearest.position.clone(),
+        };
       }
       const isNear = Boolean(!!nearest.key);
       if (isNear !== nearQuest) {
@@ -225,9 +251,15 @@ export default function Player(props) {
         setActiveObject(nearest);
       }
     }
+
     if (keyPressed.current["KeyE"] && !keyPr && nearQuest) {
-      console.log("Event Triggered!", activeObject);
-      props.switchQuest(activeObject);
+      const obj = activeObjectRef.current;
+      console.log(activeObjectRef);
+      if (!obj) return;
+
+      console.log("Event Triggered!", obj);
+      props.switchQuest(obj);
+
       unlockReason.current = "ui";
       document.exitPointerLock();
       props.setInputMode("ui");
@@ -235,14 +267,13 @@ export default function Player(props) {
       setTimeout(() => setKeyPr(false), 1000);
     }
 
-    direction.normalize();
-    direction.applyQuaternion(camera.quaternion);
-    camera.position.addScaledVector(direction, speed * delta);
+    dir.normalize();
+    dir.applyQuaternion(camera.quaternion);
+    camera.position.addScaledVector(dir, speed * delta);
     camera.position.x = THREE.MathUtils.clamp(camera.position.x, -220, 180);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, -300, 300);
     camera.position.y = 120;
   });
-
   return (
     <>
       {props.inputMode === "game" && (
