@@ -32,7 +32,7 @@ function Menu(props) {
       </button>
       <button
         className="menu-opt-btn"
-        onClick={() => props.switchQuest({ key: "table" }, true)}
+        onClick={() => props.switchQuest({ key: "visitingCard" }, true)}
       >
         Contacts
       </button>

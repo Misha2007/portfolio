@@ -16,7 +16,7 @@ export default function NightStand(props, ref) {
         index={1}
         openShelf={props.openShelf}
       >
-        {props.projects.slice(0, 2).map((project, i) => (
+        {props.projects.slice(2, 4).map((project, i) => (
           <Folder
             key={project.id}
             project={project}
@@ -33,7 +33,7 @@ export default function NightStand(props, ref) {
         index={2}
         openShelf={props.openShelf}
       >
-        {props.projects.slice(2, 4).map((project, i) => (
+        {props.projects.slice(4, 6).map((project, i) => (
           <Folder
             key={project.id}
             project={project}
@@ -50,7 +50,7 @@ export default function NightStand(props, ref) {
         index={3}
         openShelf={props.openShelf}
       >
-        {props.projects.slice(4, 6).map((project, i) => (
+        {props.projects.slice(6, 7).map((project, i) => (
           <Folder
             key={project.id}
             project={project}

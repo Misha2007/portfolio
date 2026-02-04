@@ -65,6 +65,7 @@ export default function Player(props) {
 
   const guitarRef = props.guitarRef;
   const pingPongPaddleRef = props.pingPongPaddleRef;
+  const volleyballRef = props.volleyballRef;
 
   const [nearQuest, setNearQuest] = useState(false);
   const [activeObject, setActiveObject] = useState(null);
@@ -97,9 +98,11 @@ export default function Player(props) {
 
     raycaster.current.setFromCamera(mouse.current, camera);
 
-    const objectsToTest = [guitarRef.current, pingPongPaddleRef.current].filter(
-      Boolean,
-    );
+    const objectsToTest = [
+      guitarRef.current,
+      pingPongPaddleRef.current,
+      volleyballRef.current,
+    ].filter(Boolean);
     console.log("Objects to test:", objectsToTest);
     if (objectsToTest.length === 0) return;
 

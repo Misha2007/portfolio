@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Box, Loader } from "@react-three/drei";
+import { Box, Environment, Loader } from "@react-three/drei";
 import Player from "./Player";
 import Room from "./Room";
 import Menu from "./Menu";
@@ -24,7 +24,7 @@ import VisitingCard from "./VisitingCard";
 import VisitingCard3D from "./VisitingCard3d";
 import Door from "./Door";
 import { useNavigate } from "react-router-dom";
-import { Stats } from "@react-three/drei";
+import Volleyball from "./Volleyball";
 
 function Scene() {
   const textParts = [
@@ -44,15 +44,6 @@ function Scene() {
           title: "Instructions!",
           description:
             "These are the basic controls to navigate through the room. You can also find quests here.",
-          className: "first-step",
-        },
-      },
-      {
-        element: "#element-of-mystery-2",
-        popover: {
-          title: "Navigation path!",
-          description:
-            "You need to follow this path to get able to interact with an element.",
           className: "first-step",
         },
       },
@@ -147,10 +138,12 @@ function Scene() {
   const [sofaQuestDone, setSofaQuestDone] = useState(false);
   const [shelvesQuestDone, setShelvesQuestDone] = useState(false);
   const [nightStandQuestDone, setNightStandQuestDone] = useState(false);
+  const [visitingCardQuestDone, setVisitingCardQuestDone] = useState(false);
 
   const sofaRef = useRef();
   const shelvesRef = useRef();
   const guitarRef = useRef();
+  const volleyballRef = useRef();
   const pingPongPaddleRef = useRef();
   const nightStand = useRef();
   const doorRef = useRef();
@@ -162,17 +155,25 @@ function Scene() {
   const cameraRef = useRef();
   const [openShelf, setOpenShelf] = useState(null);
   const [shouldRelock, setShouldRelock] = useState(false);
+  const [doorBox, setDoorBox] = useState(null);
+
+  const [guidePathHintShown, setGuidePathHintShown] = useState(false);
 
   const switchQuest = (quest, fromMenu = false) => {
     if (fromMenu) {
       setIsMenu(false);
+
       quest.box = interactables[quest.key];
+
       console.log("Switched quest from menu:", quest);
     }
     if (quest.key === "door") navigate("/");
     setSofaQuestDone(sofaQuestDone || quest.key === "sofa");
     setShelvesQuestDone(shelvesQuestDone || quest.key === "shelves");
     setNightStandQuestDone(nightStandQuestDone || quest.key === "nightStand");
+    setVisitingCardQuestDone(
+      visitingCardQuestDone || quest.key === "visitingCard",
+    );
     setQuest(quest);
     setInputMode("ui");
   };
@@ -258,6 +259,27 @@ function Scene() {
       driverObj.drive();
     }
   }, [isTourActive]);
+
+  useEffect(() => {
+    if (
+      sofaQuestDone &&
+      shelvesQuestDone &&
+      nightStandQuestDone &&
+      visitingCardQuestDone &&
+      doorBox
+    ) {
+      setInteractables((prev) => ({
+        ...prev,
+        door: doorBox,
+      }));
+    }
+  }, [
+    sofaQuestDone,
+    shelvesQuestDone,
+    nightStandQuestDone,
+    visitingCardQuestDone,
+    doorBox,
+  ]);
 
   return (
     <div style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
@@ -455,17 +477,34 @@ function Scene() {
               {quest ? "Press 'E' to interact" : "Press 'E' to interact"}
             </div>
           )}
-          <div
-            id="element-of-mystery-2"
-            style={{
-              position: "absolute",
-              top: "70%",
-              left: "47.7%",
-              padding: "100px 20px",
-              borderRadius: "5px",
-              zIndex: 1,
-            }}
-          ></div>
+          {isTourActive && !guidePathHintShown && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundColor: "rgba(0,0,0,0.85)",
+                color: "#fff",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 20,
+                textAlign: "center",
+                padding: "20px",
+              }}
+              onClick={() => setGuidePathHintShown(true)}
+            >
+              <h2>Look Around!</h2>
+              <p>
+                Click and drag to rotate the camera and try to find the glowing
+                guide path that will show you where to go next.
+              </p>
+              <p style={{ fontSize: "14px", marginTop: "20px" }}>
+                Click anywhere to continue
+              </p>
+            </div>
+          )}
+
           <div
             id="element-of-mystery"
             style={{
@@ -480,7 +519,11 @@ function Scene() {
             }}
           >
             <div>WSAD to move, Mouse to look around, E to interact</div>
-            <div>Press X to skip quest text</div> <br /> <div>Quests</div>
+            <div>Press X to skip quest text</div>
+            <div>
+              Use keys 1, 2, 3, 4 in order to open the shelves in the nightstand
+            </div>
+            <br /> <div>Quests</div>
             <ol style={{ paddingLeft: "20px", margin: 0 }}>
               <li
                 style={{
@@ -502,6 +545,17 @@ function Scene() {
                 }}
               >
                 Nightstand - {nightStandQuestDone ? "Completed" : "Incomplete"}
+              </li>
+
+              <li
+                style={{
+                  textDecoration: visitingCardQuestDone
+                    ? "line-through"
+                    : "none",
+                }}
+              >
+                Visiting Card -{" "}
+                {visitingCardQuestDone ? "Completed" : "Incomplete"}
               </li>
             </ol>
           </div>
@@ -571,7 +625,10 @@ function Scene() {
           )}
 
           <Canvas
-            camera={{ fov: 80, position: [40, 100, 60], rotation: [0, 1.5, 0] }}
+            camera={{
+              fov: 80,
+              position: [-30, 100, 300],
+            }}
           >
             <Suspense>
               <color attach="background" args={["#111"]} />
@@ -582,24 +639,28 @@ function Scene() {
                   camera={cameraRef.current}
                 />
               )}
-              <ambientLight intensity={1} />
-              <directionalLight intensity={0.4} position={[5, 5, 5]} />
+              <Environment
+                files="/hdr/radkow_lake_4k.hdr"
+                background
+                backgroundIntensity={0.4}
+              />
+              <directionalLight intensity={0} position={[5, 5, 5]} />
               <pointLight
                 position={[-75, 140, 100]}
                 intensity={20}
-                distance={400}
+                distance={100}
                 decay={0.5}
               />
               <pointLight
                 position={[-45, 133, 51]}
                 intensity={20}
-                distance={400}
+                distance={100}
                 decay={0.5}
               />
               <pointLight
                 position={[-85, 140, 0]}
                 intensity={20}
-                distance={400}
+                distance={100}
                 decay={0.5}
               />
               <Player
@@ -613,6 +674,7 @@ function Scene() {
                 isMenu={isMenu}
                 setIsMenu={setIsMenu}
                 guitarRef={guitarRef}
+                volleyballRef={volleyballRef}
                 pingPongPaddleRef={pingPongPaddleRef}
                 setSelectedItem={setSelectedItem}
                 isTourActive={isTourActive}
@@ -624,14 +686,16 @@ function Scene() {
                 shouldRelock={shouldRelock}
                 setShouldRelock={setShouldRelock}
               />
-              <MainCube /> <Room scale={1} />
+              <MainCube />
+              <Room scale={1} />
               <Door ref={doorRef} />
               <ObjectPositionTracker
                 objectRef={doorRef}
-                onReady={(box) =>
-                  setInteractables((prev) => ({ ...prev, door: box }))
-                }
+                onReady={(box) => {
+                  setDoorBox(box);
+                }}
               />
+
               <Lamp scale={1} position={[-40, 10, -50]} />
               <Lamp scale={1} position={[0, 0, 0]} />
               <Lamp scale={1} position={[-30, 10, 50]} />
@@ -667,13 +731,18 @@ function Scene() {
                 position={[-100, 0, 100]}
                 rotation={[0, Math.PI, 0]}
               />
-              <Stats />
               <Guitar
                 scale={100}
                 position={[-100, 70, -200]}
                 rotation={[0, -1.5, 0]}
                 name="Guitar"
                 ref={guitarRef}
+              />
+              <Volleyball
+                scale={10}
+                position={[50, 75, -235]}
+                name="Volleyball"
+                ref={volleyballRef}
               />
               <PingPongPaddle
                 scale={8}

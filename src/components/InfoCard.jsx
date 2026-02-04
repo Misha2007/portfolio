@@ -1,16 +1,23 @@
+import Volleyball from "./Volleyball";
+
 const InfoCard = ({ selectedItem, setSelectedItem }) => {
   if (!selectedItem) return null;
 
   const content = {
     Guitar: {
       name: "Guitar Yamaha C40",
-      text: "I like rock music, and I wanted to try play guitar and now I have been playing guitar over 5 years",
+      text: "I started with classical music and later transitioned to rock music. Overall, I have been playing the guitar for more than five years.",
       img: "/images/guitar.jpg",
     },
     PingPongPaddle: {
       name: "Ping pong paddles boli eseries",
-      text: "I like play ping pong in my free time at school.",
+      text: "I enjoy playing ping pong in my free time at school.",
       img: "/images/PPPaddle.png",
+    },
+    Volleyball: {
+      name: "Volleyball",
+      text: "I started playing volleyball only at vocational school, quickly became passionate about it and rarely missed a training session unless there was an important reason.",
+      img: "/images/volleyball.png",
     },
   };
 
