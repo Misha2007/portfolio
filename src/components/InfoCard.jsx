@@ -7,7 +7,7 @@ const InfoCard = ({ selectedItem, setSelectedItem }) => {
     Guitar: {
       name: "Guitar Yamaha C40",
       text: "I started with classical music and later transitioned to rock music. Overall, I have been playing the guitar for more than five years.",
-      img: "/images/guitar.png",
+      img: "/images/guitar.jpg",
     },
     PingPongPaddle: {
       name: "Ping pong paddles boli eseries",
