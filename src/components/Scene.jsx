@@ -30,7 +30,7 @@ function Scene() {
   const textParts = [
     "Hi! I am Mykhailo Drogovoz, 18 y.o, and currently I am a student at Tartu Vocational School in a software development faculty. I've been studying here for the past three years. Prior to this, I spent one year studying at a school in Tartu Descartes School before enrolling in vocational school. Before moving abroad, I attended gymnasium Kyiv-Mohyla Collegium in my home country.",
     "I decided to become a software developer, because this speciality opens a lot of opportunities and you can be so creative as you want. My first experience with coding came through a website building course and after working on a few projects, I realized that software development was the perfect field for me. The more I learned, the more I felt motivated to continue pursuing this path.",
-    "Even though I haven't participated in official competitions yet, I took part in Hack Club's Neighborhood program. The goal of the program was to build a project over 100 hours and potentially get invited to San Francisco. Although the project was closed before I could complete it, I received valuable feedback from testers and learned a lot through the process.",
+    "I have taken part in ASI Karikas, where me and my teammate got 2nd place. In addition, I took part in Hack Club's Neighborhood program. The goal of the program was to build a project over 100 hours and potentially get invited to San Francisco. Although the project was closed before I could complete it, I received valuable feedback from testers and learned a lot through the process.",
     "Outside of programming, I enjoy playing volleyball and ping pong. I also like to play the guitar in my free time, it's a great way to relax and express creativity in a different way.",
     "Thank you for visiting my portfolio, and feel free to explore my work!",
   ];
@@ -99,6 +99,7 @@ function Scene() {
       github: "https://github.com/MykhailoDrogovoz/hackatime",
       type: "solo",
       link: "https://sportvana.netlify.app",
+      userToUse: { email: "john@gmail.com", password: "qwerty" },
     },
     {
       id: 6,
@@ -120,6 +121,7 @@ function Scene() {
       github: "https://github.com/Misha2007/smart-city-event-map",
       type: "solo",
       link: "https://smart-city-events-map.vercel.app/",
+      userToUse: { email: "john@gmail.com", password: "qwerty" },
     },
   ];
 

@@ -16,7 +16,7 @@ function Folder({ project, scale = 1, position, onOpen, inputMode }) {
           scale === 1 ? Math.PI / 2 : -Math.PI / 2,
         ]}
         fontSize={0.08}
-        maxWidth={20}
+        maxWidth={0.8}
         textAlign="center"
         color="black"
       >
